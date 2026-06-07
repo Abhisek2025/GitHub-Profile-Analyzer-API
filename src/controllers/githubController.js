@@ -5,16 +5,9 @@ export const analyzeProfile = async (req, res) => {
   try {
     const { username } = req.params;
 
-const { data: user } = await axios.get(
-  `https://api.github.com/users/${username}`,
-  {
-    headers: {
-      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-      "User-Agent": "GitHub-Profile-Analyzer",
-      Accept: "application/vnd.github+json"
-    }
-  }
-);
+    const { data: user } = await axios.get(
+      `https://api.github.com/users/${username}`
+    );
 
     const accountAge =
       new Date().getFullYear() -
@@ -119,16 +112,6 @@ export const getProfileById = async (req, res) => {
 
     res.status(200).json(rows[0]);
   } catch (error) {
-  console.error(
-    "GitHub Error:",
-    error.response?.status,
-    error.response?.data
-  );
-
-  res.status(error.response?.status || 500).json({
-    success: false,
-    message: error.message,
-    details: error.response?.data
-  });
-}
+    res.status(500).json({ message: error.message });
+  }
 };
