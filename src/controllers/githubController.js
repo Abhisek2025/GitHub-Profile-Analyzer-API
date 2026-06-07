@@ -5,16 +5,16 @@ export const analyzeProfile = async (req, res) => {
   try {
     const { username } = req.params;
 
-    const { data: user } = await axios.get(
-      `https://api.github.com/users/${username}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          "User-Agent": "GitHub-Profile-Analyzer",
-          Accept: "application/vnd.github+json",
-        },
-      }
-    );
+const { data: user } = await axios.get(
+  `https://api.github.com/users/${username}`,
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      "User-Agent": "GitHub-Profile-Analyzer",
+      Accept: "application/vnd.github+json"
+    }
+  }
+);
 
     const accountAge =
       new Date().getFullYear() -
@@ -85,16 +85,50 @@ export const analyzeProfile = async (req, res) => {
       popularityScore,
     });
   } catch (error) {
-    console.error(
-      "GitHub Error:",
-      error.response?.status,
-      error.response?.data
-    );
-
-    res.status(error.response?.status || 500).json({
+    res.status(500).json({
       success: false,
       message: error.message,
-      details: error.response?.data || "Unknown error",
     });
   }
+};
+
+export const getAllProfiles = async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      "SELECT * FROM github_profiles ORDER BY analyzed_at DESC"
+    );
+
+    res.status(200).json(rows);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getProfileById = async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      "SELECT * FROM github_profiles WHERE id = ?",
+      [req.params.id]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({
+        message: "Profile not found",
+      });
+    }
+
+    res.status(200).json(rows[0]);
+  } catch (error) {
+  console.error(
+    "GitHub Error:",
+    error.response?.status,
+    error.response?.data
+  );
+
+  res.status(error.response?.status || 500).json({
+    success: false,
+    message: error.message,
+    details: error.response?.data
+  });
+}
 };
